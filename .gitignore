@@ -1,0 +1,11 @@
+# Ignorar dependências
+node_modules/
+
+# Ignorar variáveis sensíveis
+.env
+
+# Ignorar arquivos de build ou temporários
+dist/
+build/
+.DS_Store
+*.log
