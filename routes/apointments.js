@@ -35,6 +35,7 @@ router.post('/', async (req, res) => {
     );
 
     res.status(201).json({ message: 'Agendamento criado com sucesso' });
+    
   } catch (error) {
     console.error('Erro ao criar agendamento:', error);
     res.status(500).send('Erro interno ao criar agendamento');

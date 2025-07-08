@@ -3,6 +3,13 @@ const router = express.Router();
 const pool = require('../db/pool');
 
 // Função para gerar slots de tempo
+function formatToBrazilISO(date) {
+  return date.toLocaleString('sv-SE', {
+    timeZone: 'America/Sao_Paulo',
+    hour12: false
+  }).replace(' ', 'T'); // gera "2025-07-08T06:00:00"
+}
+
 function generateTimeSlots(openTime, closeTime, duration, date) {
   const [openHour, openMinute] = openTime.split(':').map(Number);
   const [closeHour, closeMinute] = closeTime.split(':').map(Number);
@@ -20,9 +27,9 @@ function generateTimeSlots(openTime, closeTime, duration, date) {
 
     if (finish <= end) {
       slots.push({
-        startTime: start.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + ':00',
-        endTime: finish.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + ':00'
-      });
+            startTime: formatToBrazilISO(start),
+            endTime: formatToBrazilISO(finish)
+        });
     }
 
     current = finish;
@@ -76,10 +83,6 @@ router.get('/', async (req, res) => {
     // Gerar todos os slots possíveis
     const allSlots = generateTimeSlots(open_time, close_time, duration, date);
 
-    console.log('Todos os slots:', allSlots);
-    console.log('Agendamentos ocupados:', usedSlots);
-    console.log('Disponíveis:', available);
-
     // Filtrar os que estão livres
     const available = allSlots.filter(slot => {
       return !usedSlots.some(block => {
@@ -95,7 +98,10 @@ router.get('/', async (req, res) => {
         );
       });
     });
-
+    
+    console.log('Todos os slots:', allSlots);
+    console.log('Agendamentos ocupados:', usedSlots);
+    console.log('Disponíveis:', available);
     res.json(available);
   } catch (error) {
     console.error('Erro ao calcular horários disponíveis:', error);
