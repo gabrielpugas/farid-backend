@@ -27,7 +27,7 @@ function generateTimeSlots(openTime, closeTime, duration, date) {
 
     current = finish;
   }
-    console.log(slots);
+    
   return slots;
 }
 
@@ -75,6 +75,10 @@ router.get('/', async (req, res) => {
 
     // Gerar todos os slots possíveis
     const allSlots = generateTimeSlots(open_time, close_time, duration, date);
+
+    console.log('Todos os slots:', allSlots);
+    console.log('Agendamentos ocupados:', usedSlots);
+    console.log('Disponíveis:', available);
 
     // Filtrar os que estão livres
     const available = allSlots.filter(slot => {
