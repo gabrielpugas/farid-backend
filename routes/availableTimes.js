@@ -20,8 +20,8 @@ function generateTimeSlots(openTime, closeTime, duration, date) {
 
     if (finish <= end) {
       slots.push({
-        startTime: start.toISOString(),
-        endTime: finish.toISOString()
+        startTime: start.start.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + ':00',
+        endTime: finish.start.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + ':00'
       });
     }
 
