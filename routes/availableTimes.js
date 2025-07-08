@@ -31,6 +31,8 @@ function generateTimeSlots(openTime, closeTime, duration, date) {
   return slots;
 }
 
+console.log(slots)
+
 router.get('/', async (req, res) => {
   const { date, service_id } = req.query;
 
