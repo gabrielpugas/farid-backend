@@ -99,9 +99,6 @@ router.get('/', async (req, res) => {
       });
     });
     
-    console.log('Todos os slots:', allSlots);
-    console.log('Agendamentos ocupados:', usedSlots);
-    console.log('Disponíveis:', available);
     res.json(available);
   } catch (error) {
     console.error('Erro ao calcular horários disponíveis:', error);

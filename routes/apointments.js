@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
       time_end,
       notes,
     } = req.body;
-
+    console.log('REQ BODY:', req.body);
     const cpfClean = client_cpf?.replace(/[^\d]/g, '').slice(0, 11) || null
 
     await pool.query(
