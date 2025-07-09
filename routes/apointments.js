@@ -8,12 +8,15 @@ router.post('/', async (req, res) => {
       client_name,
       client_email,
       client_phone,
+      client_cpf,
       service_id,
       date,
       time_start,
       time_end,
-      notes
+      notes,
     } = req.body;
+
+    const cpfClean = client_cpf?.replace(/[^\d]/g, '').slice(0, 11) || null
 
     await pool.query(
       `INSERT INTO appointments (
@@ -26,6 +29,7 @@ router.post('/', async (req, res) => {
         client_name,
         client_email,
         client_phone,
+        cpfClean,
         service_id,
         date,
         time_start,
@@ -34,8 +38,35 @@ router.post('/', async (req, res) => {
       ]
     );
 
+    if (!cpfClean || cpfClean.length !== 11) {
+      return res.status(400).json({ error: 'CPF inválido. Envie apenas os 11 dígitos numéricos.' });
+    }
+
+    const webhookUrl = 'https://n8n.gabrielpugas.com.br/webhook/appointments';
+
+    try{
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name,
+          client_email,
+          client_phone,
+          client_cpf: cpfClean,
+          service_id,
+          date,
+          time_start,
+          time_end,
+          notes: notes || null
+        })
+      }) 
+    }
+    catch (error) {
+      console.error('Erro ao enviar agendamento para o webhook:', error);
+    }
+
     res.status(201).json({ message: 'Agendamento criado com sucesso' });
-    
+
   } catch (error) {
     console.error('Erro ao criar agendamento:', error);
     res.status(500).send('Erro interno ao criar agendamento');
