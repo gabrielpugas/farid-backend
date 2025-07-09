@@ -2,6 +2,77 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 
+// router.post('/', async (req, res) => {
+//   try {
+//     const {
+//       client_name,
+//       client_email,
+//       client_phone,
+//       client_cpf,
+//       service_id,
+//       date,
+//       time_start,
+//       time_end,
+//       notes,
+//     } = req.body;
+//     console.log('REQ BODY:', req.body);
+//     const cpfClean = client_cpf?.replace(/[^\d]/g, '').slice(0, 11) || null
+
+//     await pool.query(
+//       `INSERT INTO appointments (
+//         id, client_name, client_email, client_phone, service_id,
+//         date, time_start, time_end, notes, client_cpf
+//       ) VALUES (
+//         uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9
+//       )`,
+//       [
+//         client_name,
+//         client_email,
+//         client_phone,
+//         cpfClean,
+//         service_id,
+//         date,
+//         time_start,
+//         time_end,
+//         notes || null
+//       ]
+//     );
+
+//     if (!cpfClean || cpfClean.length !== 11) {
+//       return res.status(400).json({ error: 'CPF inválido. Envie apenas os 11 dígitos numéricos.' });
+//     }
+
+//     const webhookUrl = 'https://n8n.gabrielpugas.com.br/webhook/appointments';
+
+//     try{
+//       await fetch(webhookUrl, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           client_name,
+//           client_email,
+//           client_phone,
+//           client_cpf: cpfClean,
+//           service_id,
+//           date,
+//           time_start,
+//           time_end,
+//           notes: notes || null
+//         })
+//       }) 
+//     }
+//     catch (error) {
+//       console.error('Erro ao enviar agendamento para o webhook:', error);
+//     }
+
+//     res.status(201).json({ message: 'Agendamento criado com sucesso' });
+
+//   } catch (error) {
+//     console.error('Erro ao criar agendamento:', error);
+//     res.status(500).send('Erro interno ao criar agendamento');
+//   }
+// });
+
 router.post('/', async (req, res) => {
   try {
     const {
@@ -13,38 +84,50 @@ router.post('/', async (req, res) => {
       date,
       time_start,
       time_end,
-      notes,
+      notes
     } = req.body;
-    console.log('REQ BODY:', req.body);
-    const cpfClean = client_cpf?.replace(/[^\d]/g, '').slice(0, 11) || null
 
+    // limpa o CPF: mantém apenas 11 dígitos numéricos
+    const cpfClean = client_cpf?.replace(/[^\d]/g, '').slice(0, 11) || null;
+    if (!cpfClean || cpfClean.length !== 11) {
+      return res
+        .status(400)
+        .json({ error: 'CPF inválido. Envie apenas os 11 dígitos numéricos.' });
+    }
+
+    // insere todas as colunas na ordem correta
     await pool.query(
       `INSERT INTO appointments (
-        id, client_name, client_email, client_phone, service_id,
-        date, time_start, time_end, notes, client_cpf
-      ) VALUES (
-        uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9
-      )`,
-      [
+        id,
         client_name,
         client_email,
         client_phone,
-        cpfClean,
+        client_cpf,
         service_id,
         date,
         time_start,
         time_end,
-        notes || null
+        notes
+      ) VALUES (
+        uuid_generate_v4(),
+        $1, $2, $3, $4, $5, $6, $7, $8, $9
+      )`,
+      [
+        client_name,   // $1
+        client_email,  // $2
+        client_phone,  // $3
+        cpfClean,      // $4
+        service_id,    // $5
+        date,          // $6 agora recebe 'YYYY-MM-DD'
+        time_start,    // $7
+        time_end,      // $8
+        notes || null  // $9
       ]
     );
 
-    if (!cpfClean || cpfClean.length !== 11) {
-      return res.status(400).json({ error: 'CPF inválido. Envie apenas os 11 dígitos numéricos.' });
-    }
-
+    // dispara webhook pro n8n
     const webhookUrl = 'https://n8n.gabrielpugas.com.br/webhook/appointments';
-
-    try{
+    try {
       await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,14 +142,13 @@ router.post('/', async (req, res) => {
           time_end,
           notes: notes || null
         })
-      }) 
-    }
-    catch (error) {
-      console.error('Erro ao enviar agendamento para o webhook:', error);
+      });
+      console.log('✅ Webhook enviado com sucesso');
+    } catch (err) {
+      console.error('❌ Erro ao enviar agendamento para o webhook:', err);
     }
 
     res.status(201).json({ message: 'Agendamento criado com sucesso' });
-
   } catch (error) {
     console.error('Erro ao criar agendamento:', error);
     res.status(500).send('Erro interno ao criar agendamento');
