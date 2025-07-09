@@ -21,9 +21,9 @@ router.post('/', async (req, res) => {
     await pool.query(
       `INSERT INTO appointments (
         id, client_name, client_email, client_phone, service_id,
-        date, time_start, time_end, notes
+        date, time_start, time_end, notes, client_cpf
       ) VALUES (
-        uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8
+        uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9
       )`,
       [
         client_name,
